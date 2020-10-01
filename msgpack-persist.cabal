@@ -1,4 +1,4 @@
-name:                 msgpack-binary
+name:                 msgpack-persist
 version:              0.0.15
 synopsis:             A Haskell implementation of MessagePack
 homepage:             http://msgpack.org/
@@ -20,7 +20,7 @@ description:
 
 source-repository head
   type:             git
-  location:         https://github.com/TokTok/hs-msgpack-binary.git
+  location:         https://github.com/TokTok/hs-msgpack-persist
 
 library
   default-language: Haskell2010
@@ -36,11 +36,10 @@ library
       Data.MessagePack.Put
   build-depends:
       base                      < 5
-    , binary                    >= 0.7.0.0
     , bytestring
-    , data-binary-ieee754
     , monad-validate
     , msgpack-types             >= 0.2 && < 0.3
+    , persist
     , text
 
 executable msgpack-parser
@@ -55,7 +54,7 @@ executable msgpack-parser
       base < 5
     , bytestring
     , groom
-    , msgpack-binary
+    , msgpack-persist
 
 test-suite testsuite
   type: exitcode-stdio-1.0
@@ -75,8 +74,8 @@ test-suite testsuite
     , containers
     , hashable
     , hspec
-    , msgpack-binary
-    , msgpack-types
+    , msgpack-persist
+    , msgpack-types >= 0.1.0
     , text
     , unordered-containers
     , vector
@@ -98,4 +97,4 @@ benchmark benchmark
     , bytestring
     , criterion
     , deepseq
-    , msgpack-binary
+    , msgpack-persist

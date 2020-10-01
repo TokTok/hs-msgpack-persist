@@ -31,10 +31,9 @@ module Data.MessagePack (
 
 import           Control.Applicative    (Applicative)
 import           Control.Monad          ((>=>))
-import           Control.Monad.Validate (MonadValidate (..), runValidate)
-import           Data.Binary            (Binary (..), decodeOrFail, encode)
-import           Data.Binary.Get        (Get)
+import           Control.Monad.Validate (MonadValidate, refute, runValidate)
 import qualified Data.ByteString.Lazy   as L
+import qualified Data.Persist           as P
 
 import           Data.MessagePack.Get   as X
 import           Data.MessagePack.Put   as X
@@ -43,23 +42,22 @@ import           Data.MessagePack.Types as X
 
 -- | Pack a Haskell value to MessagePack binary.
 pack :: MessagePack a => a -> L.ByteString
-pack = encode . toObject defaultConfig
+pack = L.fromStrict . P.runPut . P.put . toObject defaultConfig
 
 -- | Unpack MessagePack binary to a Haskell value.
 --
 -- On failure, returns a list of error messages.
 unpackValidate :: (MonadValidate DecodeError m, MessagePack a)
                => L.ByteString -> m a
-unpackValidate = eitherToM . decodeOrFail >=> fromObjectWith defaultConfig
+unpackValidate bs = (eitherToM . P.runGet P.get . L.toStrict) bs >>= fromObjectWith defaultConfig
   where
-    eitherToM (Left  (_, _, msg)) = refute $ decodeError msg
-    eitherToM (Right (_, _, res)) = return res
+    eitherToM (Left  msg) = refute $ decodeError msg
+    eitherToM (Right res) = return res
 
 
 unpackEither :: (MessagePack a)
-               => L.ByteString -> Either DecodeError a
+             => L.ByteString -> Either DecodeError a
 unpackEither = runValidate . unpackValidate
-
 
 -- | Unpack MessagePack binary to a Haskell value. If it fails, it fails in the
 -- Monad. In the Maybe monad, failure returns Nothing.
@@ -74,14 +72,9 @@ unpack = eitherToM . unpackEither
     eitherToM (Left msgs) = fail $ show msgs
     eitherToM (Right res) = return res
 
+instance P.Persist Object where
+    get = getObject
+    {-# INLINE get #-}
 
-instance Binary Object where
-  get = getObject
-  {-# INLINE get #-}
-
-  put = putObject
-  {-# INLINE put #-}
-
-instance MonadValidate DecodeError Get where
-    refute = fail . show
-    tolerate m = m >> return Nothing
+    put = putObject
+    {-# INLINE put #-}

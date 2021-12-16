@@ -24,7 +24,6 @@ import qualified Data.Text.Lazy             as LT
 import qualified Data.Vector                as V
 import qualified Data.Vector.Storable       as VS
 import qualified Data.Vector.Unboxed        as VU
-import           Data.Void                  (Void)
 import           Data.Word                  (Word, Word16, Word32, Word64,
                                              Word8)
 import           GHC.Generics               (Generic)
@@ -61,10 +60,9 @@ data Foo
   | Foo4 Int
   | Foo5 Int
   | Foo6 { unFoo3 :: Int }
-  | Foo7 (Maybe Foo)
-  | Foo8 Int
-  | Foo9 Int Int
-  | Foo10 Int Int Int
+  | Foo7 Int
+  | Foo8 Int Int
+  | Foo9 Int Int Int
   deriving (Eq, Show, Generic)
 
 instance MessagePack Foo
@@ -78,9 +76,8 @@ instance Arbitrary Foo where
     , Foo5 <$> arbitrary
     , Foo6 <$> arbitrary
     , Foo7 <$> arbitrary
-    , Foo8 <$> arbitrary
-    , Foo9 <$> arbitrary <*> arbitrary
-    , Foo10 <$> arbitrary <*> arbitrary <*> arbitrary
+    , Foo8 <$> arbitrary <*> arbitrary
+    , Foo9 <$> arbitrary <*> arbitrary <*> arbitrary
     ]
 
 
@@ -285,8 +282,6 @@ spec = do
       property $ \(a :: L.ByteString) -> a `shouldBe` mid a
     it "lazy-text" $
       property $ \(a :: LT.Text) -> a `shouldBe` mid a
-    it "maybe int" $
-      property $ \(a :: (Maybe Int)) -> a `shouldBe` mid a
     it "[int]" $
       property $ \(a :: [Int]) -> a `shouldBe` mid a
     it "vector int" $
@@ -325,42 +320,6 @@ spec = do
       property $ \(a :: IntMap.IntMap Int) -> a `shouldBe` mid a
     it "HashMap String Int" $
       property $ \(a :: HashMap.HashMap String Int) -> a `shouldBe` mid a
-    it "maybe int" $
-      property $ \(a :: Maybe Int) -> a `shouldBe` mid a
-    it "maybe nil" $
-      property $ \(a :: Maybe ()) -> a `shouldBe` mid a
-    it "maybe maybe int" $
-      property $ \(a :: Maybe (Maybe Int)) -> a `shouldBe` mid a
-    it "maybe bool" $
-      property $ \(a :: Maybe Bool) -> a `shouldBe` mid a
-    it "maybe double" $
-      property $ \(a :: Maybe Double) -> a `shouldBe` mid a
-    it "maybe string" $
-      property $ \(a :: Maybe String) -> a `shouldBe` mid a
-    it "maybe bytestring" $
-      property $ \(a :: Maybe S.ByteString) -> a `shouldBe` mid a
-    it "maybe lazy-bytestring" $
-      property $ \(a :: Maybe L.ByteString) -> a `shouldBe` mid a
-    it "maybe [int]" $
-      property $ \(a :: Maybe [Int]) -> a `shouldBe` mid a
-    it "maybe [string]" $
-      property $ \(a :: Maybe [String]) -> a `shouldBe` mid a
-    it "maybe (int, int)" $
-      property $ \(a :: Maybe (Int, Int)) -> a `shouldBe` mid a
-    it "maybe (int, int, int)" $
-      property $ \(a :: Maybe (Int, Int, Int)) -> a `shouldBe` mid a
-    it "maybe (int, int, int, int)" $
-      property $ \(a :: Maybe (Int, Int, Int, Int)) -> a `shouldBe` mid a
-    it "maybe (int, int, int, int, int)" $
-      property $ \(a :: Maybe (Int, Int, Int, Int, Int)) -> a `shouldBe` mid a
-    it "maybe [(int, double)]" $
-      property $ \(a :: Maybe [(Int, Double)]) -> a `shouldBe` mid a
-    it "maybe [(string, string)]" $
-      property $ \(a :: Maybe [(String, String)]) -> a `shouldBe` mid a
-    it "maybe (Assoc [(string, int)])" $
-      property $ \(a :: Maybe (Assoc [(String, Int)])) -> a `shouldBe` mid a
-    it "either int float" $
-      property $ \(a :: Either Int Float) -> a `shouldBe` mid a
 
     it "generics" $
       property $ \(a :: Foo) -> a `shouldBe` mid a
@@ -379,16 +338,13 @@ spec = do
       show (toObject Foo1) `shouldBe` "ObjectWord 0"
       show (toObject $ Foo3 3) `shouldBe` "ObjectArray [ObjectWord 2,ObjectWord 3]"
       show (toObject $ Foo3 (-3)) `shouldBe` "ObjectArray [ObjectWord 2,ObjectInt (-3)]"
-      show (toObject $ Foo9 3 5) `shouldBe` "ObjectArray [ObjectWord 8,ObjectArray [ObjectWord 3,ObjectWord 5]]"
-      show (toObject $ Foo9 (-3) (-5)) `shouldBe` "ObjectArray [ObjectWord 8,ObjectArray [ObjectInt (-3),ObjectInt (-5)]]"
-      show (toObject $ Foo10 3 5 7) `shouldBe` "ObjectArray [ObjectWord 9,ObjectArray [ObjectWord 3,ObjectWord 5,ObjectWord 7]]"
-      show (toObject $ Foo10 (-3) (-5) 7) `shouldBe` "ObjectArray [ObjectWord 9,ObjectArray [ObjectInt (-3),ObjectInt (-5),ObjectWord 7]]"
+      show (toObject $ Foo8 3 5) `shouldBe` "ObjectArray [ObjectWord 7,ObjectArray [ObjectWord 3,ObjectWord 5]]"
+      show (toObject $ Foo8 (-3) (-5)) `shouldBe` "ObjectArray [ObjectWord 7,ObjectArray [ObjectInt (-3),ObjectInt (-5)]]"
+      show (toObject $ Foo9 3 5 7) `shouldBe` "ObjectArray [ObjectWord 8,ObjectArray [ObjectWord 3,ObjectWord 5,ObjectWord 7]]"
+      show (toObject $ Foo9 (-3) (-5) 7) `shouldBe` "ObjectArray [ObjectWord 8,ObjectArray [ObjectInt (-3),ObjectInt (-5),ObjectWord 7]]"
 
     it "TyConArgs" $
       show (toObject $ TyConArgs 3 5 7) `shouldBe` "ObjectArray [ObjectWord 3,ObjectWord 5,ObjectWord 7]"
 
     it "Record" $
       show (toObject $ Record 3 5 "7") `shouldBe` "ObjectArray [ObjectWord 3,ObjectDouble 5.0,ObjectStr \"7\"]"
-
-voidTest :: Void -> Object
-voidTest = toObject

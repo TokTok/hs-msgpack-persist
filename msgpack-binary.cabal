@@ -1,5 +1,5 @@
 name:                 msgpack-binary
-version:              0.0.14
+version:              0.0.15
 synopsis:             A Haskell implementation of MessagePack
 homepage:             http://msgpack.org/
 license:              BSD3

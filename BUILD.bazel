@@ -21,6 +21,7 @@ haskell_library(
         hazel_library("monad-validate"),
         hazel_library("persist"),
         hazel_library("text"),
+        hazel_library("vector"),
     ],
 )
 
@@ -30,15 +31,8 @@ hspec_test(
     compiler_flags = ["-Wno-unused-imports"],
     deps = [
         ":hs-msgpack-persist",
-        "//hs-msgpack-types",
-        hazel_library("QuickCheck"),
+        "//hs-msgpack-testsuite",
         hazel_library("base"),
-        hazel_library("bytestring"),
-        hazel_library("containers"),
-        hazel_library("hashable"),
         hazel_library("hspec"),
-        hazel_library("text"),
-        hazel_library("unordered-containers"),
-        hazel_library("vector"),
     ],
 )

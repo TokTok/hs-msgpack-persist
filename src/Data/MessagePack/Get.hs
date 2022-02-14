@@ -20,7 +20,7 @@ module Data.MessagePack.Get
   ) where
 
 import           Control.Applicative    ((<$), (<$>), (<*>), (<|>))
-import           Control.Monad          (guard, replicateM)
+import           Control.Monad          (guard)
 import           Data.Bits              ((.&.))
 import qualified Data.ByteString        as S
 import           Data.Int               (Int16, Int32, Int64, Int8)
@@ -28,7 +28,8 @@ import           Data.Persist           (Get, get, unBE)
 import qualified Data.Persist           as P
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
-import           Data.Word              (Word64, Word32, Word16, Word8)
+import qualified Data.Vector            as V
+import           Data.Word              (Word16, Word32, Word64, Word8)
 
 import           Data.MessagePack.Types (Object (..))
 
@@ -56,12 +57,12 @@ getObject = getWord8 >>= \case
   0xC4 -> ObjectBin <$> (fromIntegral <$> getWord8 >>= getByteString)
   0xC5 -> ObjectBin <$> (fromIntegral <$> getWord16be >>= getByteString)
   0xC6 -> ObjectBin <$> (fromIntegral <$> getWord32be >>= getByteString)
-  t | t .&. 0xF0 == 0x90 -> let len = fromIntegral $ t .&. 0x0F in ObjectArray <$> replicateM len getObject
-  0xDC -> fromIntegral <$> getWord16be >>= \len -> ObjectArray <$> replicateM len getObject
-  0xDD -> fromIntegral <$> getWord32be >>= \len -> ObjectArray <$> replicateM len getObject
-  t | t .&. 0xF0 == 0x80 -> let len =  fromIntegral $ t .&. 0x0F in ObjectMap <$> replicateM len ((,) <$> getObject <*> getObject)
-  0xDE -> fromIntegral <$> getWord16be >>= \len -> ObjectMap <$> replicateM len ((,) <$> getObject <*> getObject)
-  0xDF -> fromIntegral <$> getWord32be >>= \len -> ObjectMap <$> replicateM len ((,) <$> getObject <*> getObject)
+  t | t .&. 0xF0 == 0x90 -> let len = fromIntegral $ t .&. 0x0F in ObjectArray <$> V.replicateM len getObject
+  0xDC -> fromIntegral <$> getWord16be >>= \len -> ObjectArray <$> V.replicateM len getObject
+  0xDD -> fromIntegral <$> getWord32be >>= \len -> ObjectArray <$> V.replicateM len getObject
+  t | t .&. 0xF0 == 0x80 -> let len =  fromIntegral $ t .&. 0x0F in ObjectMap <$> V.replicateM len ((,) <$> getObject <*> getObject)
+  0xDE -> fromIntegral <$> getWord16be >>= \len -> ObjectMap <$> V.replicateM len ((,) <$> getObject <*> getObject)
+  0xDF -> fromIntegral <$> getWord32be >>= \len -> ObjectMap <$> V.replicateM len ((,) <$> getObject <*> getObject)
   0xD4 -> ObjectExt <$> getWord8 <*> getByteString 1
   0xD5 -> ObjectExt <$> getWord8 <*> getByteString 2
   0xD6 -> ObjectExt <$> getWord8 <*> getByteString 4

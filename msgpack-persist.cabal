@@ -38,9 +38,10 @@ library
       base                      < 5
     , bytestring
     , monad-validate
-    , msgpack-types             >= 0.2 && < 0.3
+    , msgpack-types             >= 0.3 && < 0.4
     , persist
     , text
+    , vector
 
 executable msgpack-parser
   default-language: Haskell2010
@@ -63,22 +64,14 @@ test-suite testsuite
   main-is: testsuite.hs
   other-modules:
       Data.MessagePackSpec
-      Data.Result
   ghc-options:
       -Wall
       -fno-warn-unused-imports
   build-depends:
       base < 5
-    , QuickCheck
-    , bytestring
-    , containers
-    , hashable
     , hspec
     , msgpack-persist
-    , msgpack-types >= 0.1.0
-    , text
-    , unordered-containers
-    , vector
+    , msgpack-testsuite
 
 benchmark benchmark
   type: exitcode-stdio-1.0

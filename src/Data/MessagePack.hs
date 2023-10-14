@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Trustworthy      #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 --------------------------------------------------------------------
 -- |
